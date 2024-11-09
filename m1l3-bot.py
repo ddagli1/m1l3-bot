@@ -1,30 +1,35 @@
 import discord
-import random   
+# Discord botları için komut tabanlı bir framework sağlar. 
+# Bu framework sayesinde, botumuzun belirli komutlara yanıt vermesini kolayca tanımlayabiliriz.
+from discord.ext import commands
 from bot_mantik import gen_pass
 
-# ayricaliklar (intents) değişkeni botun ayrıcalıklarını depolayacak
 intents = discord.Intents.default()
-# Mesajları okuma ayrıcalığını etkinleştirelim
-intents.message_content = True
-# client (istemci) değişkeniyle bir bot oluşturalım ve ayrıcalıkları ona aktaralım
-client = discord.Client(intents=intents)
+intents.message_content = True # botun mesaj içeriğine erişimini aktif hale getiriyoruz.
 
-@client.event
-async def on_ready():#bot başarılı bir şekilde Discord'a bağlandığında tetiklenir
-    print(f'{client.user} olarak giriş yaptık.')
+bot = commands.Bot(command_prefix='$', intents=intents)
+#Bu özellik, botun kendisine gönderilen komutları tanıması için bir ön ek tanımlar.
+#  $ işareti komut ön eki olarak belirlenmiştir. Yani bot sadece $ ile başlayan komutlara yanıt verir.
 
-@client.event
-async def on_message(message):#Sunucudaki herhangi bir kanalda bir mesaj gönderildiğinde tetiklenir.
-    if message.author == client.user:
-        return
-    if message.content.startswith('$merhaba'):
-        await message.channel.send("Selam!")
-    elif message.content.startswith('$bye'):
-        await message.channel.send("\U0001f642")
-    
-    elif message.content.startswith('$sifre'):
-        await message.channel.send(gen_pass(5))
-    else:
-        await message.channel.send(message.content)
+@bot.event # bot belirli bir olay gerçekleştiğinde tetiklensin.
+async def on_ready(): # bot başarılı bir şekilde Discord'a bağlandığında tetiklenir
+    print(f'{bot.user} olarak giriş yaptık')
 
-client.run("token")
+@bot.command() # botun bir komutu tanıması için bu dekoratörü kullanırız.
+async def hello(ctx): # hello adında bir komut tanımladık. ctx(context), komutun çağrıldığı yer hakkındaki bilgileri içerir.
+    await ctx.send(f'Merhaba {bot.user}! Ben bir botum!')
+#Bu komutun çalışması için, kullanıcı sohbette $hello yazmalıdır. 
+
+@bot.command() # botun bir komutu tanıması için bu dekoratörü kullanırız.
+async def pasw(ctx): # pasw adında bir komut tanımladık. ctx(context), komutun çağrıldığı yer hakkındaki bilgileri içer
+    await ctx.send(gen_pass(10))
+#Bu komutun çalışması için kullanıcı $pasw yazmalıdır.
+
+@bot.command()
+async def joined(ctx, member: discord.Member):
+    """Says when a member joined."""
+    await ctx.send(f'{member.name} joined {discord.utils.format_dt(member.joined_at)}')
+ 
+
+
+bot.run("token")
